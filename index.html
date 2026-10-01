@@ -10,7 +10,6 @@
 <meta name="format-detection" content="telephone=no">
 <title>りあれびAI窓口の検討</title>
 <style>
-  /* 単体で開く用。公開ページ側で自動的に付く分をここで補う */
   :root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
   html { -webkit-text-size-adjust: 100%; }
   img { max-width: 100%; }
@@ -151,6 +150,9 @@
   }
   .opt-note { font-size: 13px; color: var(--muted); margin-top: 7px; min-height: 1.6em; }
   .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  /* 前の選択で意味がなくなった項目は、触れないことが見て分かるようにする */
+  .field.off > label, .field.off .help { opacity: .45; }
+  select:disabled, input:disabled { opacity: .45; cursor: not-allowed; }
   @media (max-width: 460px) { .row { grid-template-columns: 1fr; } }
   fieldset { border: 1px solid var(--line); border-radius: 3px; padding: 14px 16px; margin: 0 0 22px; }
   legend { font-weight: 700; font-size: 15px; padding-inline: 6px; }
@@ -516,9 +518,9 @@
     </div>
 
     <div class="row">
-      <div class="field">
+      <div class="field" id="field-price">
         <label for="price">有料プラン</label>
-        <span class="help">C（個別検証）を有料限定にする場合。無料会員はA＋Bだけになります。</span>
+        <span class="help" id="help-price">C（個別検証）を有料限定にする場合。無料会員はA＋Bだけになります。</span>
         <select id="price">
           <option value="0" selected>作らない（全部無料）</option>
           <option value="500">月500円（月10相談まで）</option>
@@ -526,9 +528,9 @@
           <option value="1980">月1,980円（月50相談まで）</option>
         </select>
       </div>
-      <div class="field">
+      <div class="field" id="field-ratio">
         <label for="ratio">課金率</label>
-        <span class="help">会員のうち有料になる割合。</span>
+        <span class="help" id="help-ratio">会員のうち有料になる割合。</span>
         <select id="ratio">
           <option value="0.02">2%（控えめな想定）</option>
           <option value="0.05" selected>5%（一般的な水準）</option>
@@ -685,7 +687,27 @@
   function el(id) { return document.getElementById(id); }
   function yen(n) { return Math.round(n).toLocaleString("ja-JP") + "円"; }
 
+  // 前の選択で意味がなくなった項目を触れなくする
+  function syncEnabled() {
+    var cOn = el("fC").checked;
+    var priceSel = el("price");
+    if (!cOn) priceSel.value = "0";
+    priceSel.disabled = !cOn;
+    el("field-price").classList.toggle("off", !cOn);
+    el("help-price").textContent = cOn
+      ? "C（個別検証）を有料限定にする場合。無料会員はA＋Bだけになります。"
+      : "C（個別検証）を使う場合に選べます。";
+
+    var paidOn = cOn && priceSel.value !== "0";
+    el("ratio").disabled = !paidOn;
+    el("field-ratio").classList.toggle("off", !paidOn);
+    el("help-ratio").textContent = paidOn
+      ? "会員のうち有料になる割合。"
+      : "有料プランを作る場合に選べます。";
+  }
+
   function calc() {
+    syncEnabled();
     var members = Math.max(0, parseInt(el("members").value, 10) || 0);
     var cap = parseFloat(el("cap").value);
     var use = parseFloat(el("use").value);
