@@ -380,7 +380,23 @@
   <p>会員が増えると月額も増えます。これをキャストさんからの課金で回収する場合の形です。</p>
 
   <h3>どこを有料にするか</h3>
-  <p>素直なのは<strong>C（本人の条件と突き合わせる個別検証）を有料限定にする</strong>やり方です。</p>
+  <p>課金の形は2つあります。<strong>どちらでも成立しますし、組み合わせることもできます。</strong></p>
+
+  <div class="scroll">
+    <table>
+      <thead><tr><th>形</th><th>有料にすると</th><th>向いている場面</th></tr></thead>
+      <tbody>
+        <tr><td><strong>回数で課金</strong></td>
+            <td>機能は無料と同じで、<strong>相談できる回数が増える</strong></td>
+            <td>C（個別検証）を作る前でも始められる。最初に試すならこちら</td></tr>
+        <tr><td><strong>機能で課金</strong></td>
+            <td><strong>C（個別検証）が使えるようになる</strong>＋回数も増える</td>
+            <td>Cを作ったあと。原価が高い機能なので課金対象として筋が通る</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>以下は<strong>機能で課金する場合</strong>（C を有料限定）の計算です。回数で課金する場合は、無料会員もCを使えるぶん原価が上がります。シミュレーターで切り替えて比べられます。</p>
   <div class="scroll">
     <table>
       <thead><tr><th></th><th>使える機能</th><th class="num">相談枠</th></tr></thead>
@@ -505,6 +521,16 @@
       </div>
     </div>
 
+    <div class="field" id="field-perk">
+      <label for="perk">有料にすると何が変わるか</label>
+      <span class="help" id="help-perk">課金してもらう理由をどこに置くか。</span>
+      <select id="perk">
+        <option value="count" selected>相談できる回数が増えるだけ（機能は無料と同じ）</option>
+        <option value="c">C（個別検証）が使えるようになる＋回数も増える</option>
+      </select>
+      <p class="opt-note" id="note-perk"></p>
+    </div>
+
     <div class="field">
       <label for="turns">1相談の往復数</label>
       <span class="help">質問と回答の往復を何回まで1相談として数えるか。長いほど費用が上がります。</span>
@@ -520,7 +546,7 @@
     <div class="row">
       <div class="field" id="field-price">
         <label for="price">有料プラン</label>
-        <span class="help" id="help-price">C（個別検証）を有料限定にする場合。無料会員はA＋Bだけになります。</span>
+        <span class="help" id="help-price">有料会員の月額と、使える相談回数。</span>
         <select id="price">
           <option value="0" selected>作らない（全部無料）</option>
           <option value="500">月500円（月10相談まで）</option>
@@ -689,16 +715,24 @@
 
   // 前の選択で意味がなくなった項目を触れなくする
   function syncEnabled() {
+    var paidOn = el("price").value !== "0";
     var cOn = el("fC").checked;
-    var priceSel = el("price");
-    if (!cOn) priceSel.value = "0";
-    priceSel.disabled = !cOn;
-    el("field-price").classList.toggle("off", !cOn);
-    el("help-price").textContent = cOn
-      ? "C（個別検証）を有料限定にする場合。無料会員はA＋Bだけになります。"
-      : "C（個別検証）を使う場合に選べます。";
 
-    var paidOn = cOn && priceSel.value !== "0";
+    // 「Cが使えるようになる」はCを作っていないと選べない
+    var perk = el("perk");
+    if (!cOn && perk.value === "c") perk.value = "count";
+    perk.disabled = !paidOn || !cOn;
+    el("field-perk").classList.toggle("off", perk.disabled);
+    el("help-perk").textContent = !paidOn
+      ? "有料プランを作る場合に選べます。"
+      : (cOn ? "課金してもらう理由をどこに置くか。"
+             : "C（個別検証）を使う設定にすると、Cを有料限定にする案も選べます。");
+    // Cを使っていないのに「無料会員もCを使える」と書くと嘘になる
+    el("note-perk").textContent = !paidOn ? ""
+      : perk.value === "c" ? "無料会員はA＋Bだけになります。Cは原価が高いので課金対象として筋が通ります。"
+      : cOn ? "無料会員もCを使えます。Cを作る前から課金を試せる形です。"
+      : "機能は全員同じで、相談できる回数だけが増えます。";
+
     el("ratio").disabled = !paidOn;
     el("field-ratio").classList.toggle("off", !paidOn);
     el("help-ratio").textContent = paidOn
@@ -718,8 +752,6 @@
     var ratio = parseFloat(el("ratio").value);
 
     var on = { A: el("fA").checked, B: el("fB").checked, C: el("fC").checked };
-    // Cを切ったら有料プランは成立しないので、課金なしとして扱う
-    if (!on.C) price = 0;
     var paid = price > 0 ? Math.round(members * ratio) : 0;
     var free = members - paid;
     var paidCap = price === 500 ? 10 : price === 980 ? 20 : price === 1980 ? 50 : 0;
@@ -728,12 +760,14 @@
     var nFree = free * effCap * use, nPaid = paid * paidCap * use;
     var n = nFree + nPaid;
 
-    // 課金する場合、Cは有料会員だけが使える。無料会員はA+Bのぶんを振り直す
+    // Cを有料限定にする案のときだけ、無料会員からCを外す。
+    // 回数で課金する案なら、無料会員も同じ機能を使える
+    var cPaidOnly = (el("perk").value === "c") && price > 0 && on.C;
     var freeModes = [], paidModes = [];
     ["A", "B", "C"].forEach(function (m) {
       if (!on[m]) return;
       paidModes.push(m);
-      if (!(m === "C" && price > 0)) freeModes.push(m);
+      if (!(m === "C" && cPaidOnly)) freeModes.push(m);
     });
 
     function costOf(cnt, modes) {
@@ -778,7 +812,7 @@
       : "";
   }
 
-  ["members", "cap", "use", "model", "nrev", "turns", "price", "ratio", "fA", "fB", "fC"]
+  ["members", "cap", "use", "model", "nrev", "turns", "price", "ratio", "perk", "fA", "fB", "fC"]
     .forEach(function (id) {
       var e = el(id);
       e.addEventListener("input", calc);
