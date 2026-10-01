@@ -1,0 +1,20 @@
+# インデックス拒否は各ページの <meta name="robots" content="noindex"> で行う。
+# ここで Disallow すると noindex を読めなくなり、かえってURLが登録されることがある。
+User-agent: *
+Allow: /
+
+# 生成AIのクローラーは明示的に拒否する
+User-agent: GPTBot
+Disallow: /
+
+User-agent: ClaudeBot
+Disallow: /
+
+User-agent: CCBot
+Disallow: /
+
+User-agent: Google-Extended
+Disallow: /
+
+User-agent: PerplexityBot
+Disallow: /

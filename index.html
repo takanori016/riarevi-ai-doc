@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="robots" content="noindex, nofollow, noarchive, nosnippet, noimageindex">
+<meta name="googlebot" content="noindex, nofollow, noarchive">
+<meta name="bingbot" content="noindex, nofollow, noarchive">
+<meta name="referrer" content="no-referrer">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="format-detection" content="telephone=no">
+<title>りあれびAI窓口の検討</title>
+<style>
+  /* 単体で開く用。公開ページ側で自動的に付く分をここで補う */
+  :root { color-scheme: light; padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  html { -webkit-text-size-adjust: 100%; }
+  img { max-width: 100%; }
+  [hidden] { display: none !important; }
+</style>
+<style>
+  /* 縦1カラムの資料。見出し→本文→表の繰り返しで、スマホで上から読み切れる形 */
+  :root {
+    --bg: #fbfaf8;
+    --surface: #ffffff;
+    --sunken: #f4f1ec;
+    --fg: #1f1b18;
+    --muted: #6b635c;
+    --line: #e3ddd5;
+    --accent: #9a3b2f;
+    --accent-soft: #f6ebe8;
+    --warn: #8a5a12;
+    --warn-soft: #fbf3e2;
+    --ok: #2f6b4f;
+    --font-display: "Zen Old Mincho", "Hiragino Mincho ProN", "Yu Mincho", serif;
+    --font-body: "Zen Kaku Gothic New", "Hiragino Kaku Gothic ProN", "Yu Gothic", system-ui, sans-serif;
+    color-scheme: light;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --bg: #17140f; --surface: #201c17; --sunken: #1a1711;
+      --fg: #f0ebe3; --muted: #a79d92; --line: #342e27;
+      --accent: #e08573; --accent-soft: #33221e;
+      --warn: #e0ad5e; --warn-soft: #2e2416; --ok: #7fbf9c;
+      color-scheme: dark;
+    }
+  }
+  :root[data-theme="dark"] {
+    --bg: #17140f; --surface: #201c17; --sunken: #1a1711;
+    --fg: #f0ebe3; --muted: #a79d92; --line: #342e27;
+    --accent: #e08573; --accent-soft: #33221e;
+    --warn: #e0ad5e; --warn-soft: #2e2416; --ok: #7fbf9c;
+    color-scheme: dark;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    background: var(--bg); color: var(--fg);
+    font-family: var(--font-body); font-size: 16px; line-height: 1.85;
+    margin: 0; padding-inline: 20px; padding-block: 0 72px;
+    -webkit-text-size-adjust: 100%;
+  }
+  .wrap { max-width: 44rem; margin: 0 auto; }
+
+  header { padding-block: 56px 40px; border-bottom: 1px solid var(--line); }
+  .eyebrow { font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--accent); margin: 0 0 14px; }
+  h1 { font-family: var(--font-display); font-size: clamp(27px, 7.2vw, 40px); line-height: 1.3;
+       margin: 0 0 18px; font-weight: 600; text-wrap: balance; }
+  .lede { color: var(--muted); margin: 0; font-size: 15px; }
+
+  section { padding-block: 44px; border-bottom: 1px solid var(--line); }
+  section:last-of-type { border-bottom: 0; }
+  h2 { font-family: var(--font-display); font-size: clamp(20px, 5.2vw, 26px); line-height: 1.4;
+       margin: 0 0 20px; font-weight: 600; }
+  h3 { font-size: 16px; margin: 32px 0 10px; font-weight: 700; }
+  p { margin: 0 0 16px; }
+  p:last-child { margin-bottom: 0; }
+  .note { color: var(--muted); font-size: 14px; }
+
+  .stats { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: var(--line);
+           border: 1px solid var(--line); border-radius: 3px; overflow: hidden; margin-block: 24px; }
+  .stat { background: var(--surface); padding: 18px 16px; min-width: 0; }
+  .stat dt { font-size: 12px; color: var(--muted); letter-spacing: .04em; }
+  .stat dd { margin: 4px 0 0; font-family: var(--font-display);
+             font-size: clamp(21px, 6vw, 27px); font-variant-numeric: tabular-nums; font-weight: 600; }
+  .stat dd span { font-size: 13px; font-family: var(--font-body); font-weight: 400; color: var(--muted); margin-inline-start: 3px; }
+
+  .scroll { overflow-x: auto; margin-block: 20px; }
+  table { border-collapse: collapse; width: 100%; min-width: 23rem; font-size: 14.5px; }
+  caption { text-align: left; font-size: 13px; color: var(--muted); padding-bottom: 8px; }
+  th, td { padding: 11px 12px; text-align: left; border-bottom: 1px solid var(--line); vertical-align: top; }
+  thead th { font-size: 12.5px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  tbody tr:last-child td { border-bottom: 0; }
+  .pos { color: var(--ok); font-weight: 700; }
+  .neg { color: var(--accent); font-weight: 700; }
+
+  .pattern { background: var(--surface); border: 1px solid var(--line); border-radius: 3px;
+             padding: 22px 20px; margin-block: 16px; }
+  .pattern-head { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 6px; }
+  .tag { font-family: var(--font-display); font-size: 19px; font-weight: 600; color: var(--accent); }
+  .pattern h3 { margin: 0; font-size: 17px; }
+  .for { font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 99px; padding: 1px 9px; }
+  .dialog { background: var(--accent-soft); border-radius: 3px; padding: 14px 16px; margin-block: 14px; font-size: 14.5px; }
+  .dialog p { margin: 0 0 8px; }
+  .dialog p:last-child { margin: 0; }
+  .dialog .q { color: var(--muted); }
+  .meta { display: flex; gap: 18px; flex-wrap: wrap; font-size: 13.5px; color: var(--muted);
+          border-top: 1px solid var(--line); padding-top: 12px; margin-top: 14px; }
+  .meta b { color: var(--fg); font-variant-numeric: tabular-nums; }
+
+  .callout { border-inline-start: 3px solid var(--warn); background: var(--warn-soft);
+             padding: 16px 18px; border-radius: 0 3px 3px 0; margin-block: 20px; }
+  .callout h3 { margin: 0 0 8px; color: var(--warn); font-size: 15px; }
+  .callout p { margin: 0 0 10px; font-size: 14.5px; }
+  .callout p:last-child { margin: 0; }
+
+  ul { margin: 0 0 16px; padding-inline-start: 1.25em; }
+  li { margin-bottom: 7px; }
+  .yes::before { content: "○ "; color: var(--ok); font-weight: 700; }
+  .no::before { content: "× "; color: var(--accent); font-weight: 700; }
+
+  ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 20px 0 0; }
+  ol.steps li { counter-increment: s; position: relative; padding-inline-start: 2.4em; margin-bottom: 18px; }
+  ol.steps li::before {
+    content: counter(s); position: absolute; inset-inline-start: 0; top: .15em;
+    width: 1.7em; height: 1.7em; border-radius: 99px; background: var(--accent); color: #fff;
+    display: grid; place-items: center; font-size: 12.5px; font-weight: 700; font-family: var(--font-body);
+  }
+  ol.steps b { display: block; }
+
+  /* プラン3案。横並びは幅が足りないので縦に積む */
+  .plan { border: 1px solid var(--line); border-radius: 3px; background: var(--surface);
+          padding: 20px; margin-block: 14px; }
+  .plan.rec { border-color: var(--accent); border-width: 2px; }
+  .plan-top { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .plan h3 { margin: 0; font-size: 17px; }
+  .badge { font-size: 11px; background: var(--accent); color: #fff; padding: 2px 9px; border-radius: 99px; letter-spacing: .04em; }
+  .plan-spec { font-size: 14px; color: var(--muted); margin: 8px 0 14px; }
+  .plan-fig { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; border-top: 1px solid var(--line); padding-top: 14px; }
+  .plan-fig div { min-width: 0; }
+  .plan-fig dt { font-size: 11.5px; color: var(--muted); }
+  .plan-fig dd { margin: 2px 0 0; font-size: 16px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* シミュレーター */
+  .sim { background: var(--surface); border: 1px solid var(--line); border-radius: 4px; padding: 20px; margin-block: 24px; }
+  .field { margin-bottom: 22px; }
+  .field > label { display: block; font-weight: 700; font-size: 15px; margin-bottom: 2px; }
+  .field .help { display: block; font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 9px; }
+  select, input[type="number"] {
+    width: 100%; font: inherit; font-size: 15px; padding: 10px 12px;
+    border: 1px solid var(--line); border-radius: 3px; background: var(--sunken); color: var(--fg);
+  }
+  .opt-note { font-size: 13px; color: var(--muted); margin-top: 7px; min-height: 1.6em; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 460px) { .row { grid-template-columns: 1fr; } }
+  fieldset { border: 1px solid var(--line); border-radius: 3px; padding: 14px 16px; margin: 0 0 22px; }
+  legend { font-weight: 700; font-size: 15px; padding-inline: 6px; }
+  .check { display: flex; gap: 10px; align-items: flex-start; margin-bottom: 12px; }
+  .check:last-child { margin-bottom: 0; }
+  .check input { margin-top: .45em; width: 18px; height: 18px; flex: none; accent-color: var(--accent); }
+  .check span { font-size: 14.5px; }
+  .check span b { display: block; }
+  .check span em { font-style: normal; color: var(--muted); font-size: 13px; }
+
+  .result { background: var(--sunken); border-radius: 3px; padding: 18px; margin-top: 4px; }
+  .result h3 { margin: 0 0 14px; font-size: 14px; letter-spacing: .04em; color: var(--muted); font-weight: 600; }
+  .rgrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px 12px; }
+  .rgrid div { min-width: 0; }
+  .rgrid dt { font-size: 12px; color: var(--muted); }
+  .rgrid dd { margin: 2px 0 0; font-family: var(--font-display); font-size: clamp(19px, 5.4vw, 24px);
+              font-weight: 600; font-variant-numeric: tabular-nums; }
+  .balance { border-top: 1px solid var(--line); margin-top: 16px; padding-top: 14px;
+             display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .balance span { font-size: 14px; color: var(--muted); }
+  .balance strong { font-family: var(--font-display); font-size: clamp(22px, 6.4vw, 29px); font-variant-numeric: tabular-nums; }
+
+  footer { padding-block: 32px 0; color: var(--muted); font-size: 13px; }
+</style>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Zen+Old+Mincho:wght@400;600&family=Zen+Kaku+Gothic+New:wght@400;700&display=swap">
+
+<div class="wrap">
+
+<header>
+  <p class="eyebrow">社内検討資料</p>
+  <h1>りあれびにAI窓口を<br>載せる場合の費用と注意点</h1>
+  <p class="lede">集めた求人・口コミデータを使って、キャストさんの相談に答えるAIを置けるか。何ができて、1回いくらかかり、どこに気をつける必要があるかを整理しました。マネタイズ前なので、<strong>月数千円で始める形</strong>を前提にしています。2026年10月1日時点。</p>
+</header>
+
+<section>
+  <h2>いま取得中のデータ</h2>
+  <p>全国47都道府県から、求人媒体4社と掲示板を横断して収集しています。求人票に書かれた条件と、実際に働いたキャストさんの証言を、同じ店舗で突き合わせられる状態です。下の件数は10月1日時点で、一部の媒体はまだ取得が続いています。</p>
+
+  <dl class="stats">
+    <div class="stat"><dt>口コミ・掲示板</dt><dd>168<span>万件</span></dd></div>
+    <div class="stat"><dt>求人票</dt><dd>15,476<span>店</span></dd></div>
+    <div class="stat"><dt>店長ブログ</dt><dd>104,396<span>記事</span></dd></div>
+    <div class="stat"><dt>対象エリア</dt><dd>47<span>都道府県</span></dd></div>
+  </dl>
+
+  <div class="scroll">
+    <table>
+      <caption>口コミの内訳（取得中）</caption>
+      <thead><tr><th>媒体</th><th class="num">件数</th><th>誰の声か</th></tr></thead>
+      <tbody>
+        <tr><td>ヘブンネット</td><td class="num">479,860</td><td>お客さん側</td></tr>
+        <tr><td>爆サイ</td><td class="num">474,292</td><td>掲示板</td></tr>
+        <tr><td>バニラ</td><td class="num">389,761</td><td>キャスト側</td></tr>
+        <tr><td>ガールズヘブン</td><td class="num">309,057</td><td>キャスト側</td></tr>
+        <tr><td>ムスメコネクト</td><td class="num">24,788</td><td>キャスト側・5軸評点</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="note">キャスト側の証言が約72万件。求人票の「日給3万円以上可」に対して、実際にいくらだったかを照合できます。</p>
+</section>
+
+<section>
+  <h2>3つの使い方</h2>
+  <p>性質がまったく違うので、同じ「AI窓口」として一括りにせず、分けて考える必要があります。費用も3倍ちがいます。<strong>以降この資料では、この3つをA・B・Cと呼びます。</strong></p>
+
+  <div class="pattern">
+    <div class="pattern-head"><span class="tag">A</span><h3>一般的な相談に答える</h3><span class="for">キャストさん向け</span></div>
+    <p>業界の一般知識で答えるだけ。データベースは引きません。キャラクター（「AIいろはちゃん」など）を立てるなら、ここが土台になります。</p>
+    <div class="dialog">
+      <p class="q">体験入店って何をされるんですか？</p>
+      <p>お店の雰囲気を知るための1日お試し出勤です。多くのお店では面接のあとに案内されて、当日のうちにお給料が出ます。合わなければ続ける義務はありません。</p>
+    </div>
+    <p>店名は一切出ません。読み込むのはキャラ設定と一般知識、それに「これは言わない」という禁止事項だけです。</p>
+    <div class="meta"><span>1相談 <b>9円</b></span><span class="note">安いモデル・6往復</span></div>
+  </div>
+
+  <div class="pattern">
+    <div class="pattern-head"><span class="tag">B</span><h3>相場を数字で見せる</h3><span class="for">キャストさん向け</span></div>
+    <p>条件を言われたら、そのエリアと業種の実際の分布を返します。該当する求人票5〜10店と、その店の口コミを読み込みます。</p>
+    <div class="dialog">
+      <p class="q">札幌のデリヘルで日給3万円って普通ですか？</p>
+      <p>すすきののデリヘル133店だと、体験入店の平均は44,000円です。3万円は低めの水準にあたります。ただし保証の条件はお店ごとに差が大きいので、金額だけで比べないほうがいいです。</p>
+    </div>
+    <p><strong>特定の店をすすめるのではなく、分布だけを示す</strong>形にします。判断はキャストさんに委ねます。</p>
+    <div class="meta"><span>1相談 <b>13円</b></span><span class="note">安いモデル・6往復・口コミ20件</span></div>
+  </div>
+
+  <div class="pattern">
+    <div class="pattern-head"><span class="tag">C</span><h3>本人の条件と突き合わせる</h3><span class="for">キャストさん向け・会員登録が前提</span></div>
+    <p>初回に聞いたプロフィール（希望収入・勤務できる日数・NG条件・経験）を踏まえて、希望が成り立つかを検証します。条件に合う10店の求人票と口コミ、ムスメコネクトの評点を読み込みます。</p>
+    <div class="dialog">
+      <p class="q">週2日で月30万ほしいです。未経験で顔出しNGです。</p>
+      <p>週2日は月8〜10日なので、1日あたり3〜3.75万円が必要になります。顔出しNG可で保証があるお店は、このエリアに12店。ただしそのうち4店は、口コミで「保証の条件が厳しい」という指摘が複数出ています。面接で保証の条件を必ず確認してください。</p>
+    </div>
+    <p><strong>ここが一番価値の出る部分です。</strong>求人票の主張と、実際に働いたキャストさんの証言を突き合わせられるのは、168万件の口コミがあるからできることです。他社にはない機能になります。</p>
+    <div class="meta"><span>1相談 <b>19円</b></span><span class="note">安いモデル・6往復・口コミ20件</span></div>
+  </div>
+</section>
+
+<section>
+  <h2>「1相談」の数え方と、往復の上限</h2>
+  <p>この資料では<strong>1相談 ＝ 質問と回答の往復6回</strong>として計算しています。「体入って何？」→回答→「保証はどうなるの？」→回答…を6回繰り返す、という単位です。</p>
+
+  <p><strong>往復を重ねるほど1回が高くなります。</strong>これまでの会話を毎回ぜんぶ読み直して答えるしくみなので、会話が長くなるほど読む量が増えます。</p>
+
+  <div class="scroll">
+    <table>
+      <caption>往復数と1相談あたりの費用（安いモデル）</caption>
+      <thead><tr><th>機能</th><th class="num">4往復</th><th class="num">6往復</th><th class="num">10往復</th></tr></thead>
+      <tbody>
+        <tr><td>A 一般相談<br><span class="note">データを引かない</span></td><td class="num">5.4円</td><td class="num">9.0円</td><td class="num">18.6円</td></tr>
+        <tr><td>B 相場提示<br><span class="note">エリアの給与分布</span></td><td class="num">8.3円</td><td class="num">12.5円</td><td class="num">23.3円</td></tr>
+        <tr><td>C 個別検証<br><span class="note">本人の条件と突き合わせ</span></td><td class="num">13.3円</td><td class="num">19.4円</td><td class="num">34.2円</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>上限は付けたほうがいいと考えます。</strong>ただし会話を途中で切るのではなく、こうします。</p>
+  <ul>
+    <li><strong>1相談につき10往復まで</strong>。そこで「相談を続けますか？」と確認を出し、続ける場合は次の相談1件としてカウントする</li>
+    <li>こうすると、無制限に伸びる会話で費用が読めなくなるのを防げます。キャストさんの体験としても、10往復で区切りを入れるのは不自然ではありません</li>
+  </ul>
+  <p class="note">10往復で打ち切る実装は簡単で、費用の上振れをほぼ完全に抑えられます。相談回数の上限とは別の、二重の安全弁になります。</p>
+</section>
+
+<section>
+  <h2>安く始めて、雑にしない</h2>
+  <p>マネタイズ前なので、まず月数千円で始められる形を考えます。ただし安くするために削ると、キャストさんが離れる部分があります。そこは削りません。</p>
+
+  <h3>削る効果を実測しました</h3>
+  <div class="scroll">
+    <table>
+      <caption>C（本人の条件と突き合わせる個別検証）・6往復で比較</caption>
+      <thead><tr><th>やること</th><th class="num">1相談</th><th class="num">削減</th></tr></thead>
+      <tbody>
+        <tr><td>何も削らない（高いモデル・口コミ40件）</td><td class="num">40.0円</td><td class="num">—</td></tr>
+        <tr><td>モデルを安いほうにする</td><td class="num">21.0円</td><td class="num"><strong>−47%</strong></td></tr>
+        <tr><td>さらに口コミを40→20件に減らす</td><td class="num">19.4円</td><td class="num">−51%</td></tr>
+        <tr><td>さらに往復上限を6→4にする</td><td class="num">13.3円</td><td class="num">−67%</td></tr>
+        <tr><td>機能をB（相場提示だけ）に落とす</td><td class="num">8.3円</td><td class="num">−79%</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>効くのはモデルの選択です。</strong>安いほうにするだけで半分近くになり、しかも違いはほぼ分かりません。</p>
+  <p>いっぽう<strong>口コミの件数を半分にしても、下がるのは4%ほど</strong>でした。費用の大半はキャラ設定と会話履歴が占めていて、口コミの量はそこまで効いていません。<strong>読み込む口コミを削って節約するのは、やる価値がありません。</strong>品質だけ落ちて費用は変わりません。</p>
+
+  <h3>削ってはいけないもの</h3>
+  <ul>
+    <li><strong>数字の正確さ</strong>。AIに計算させず、データベースから出した値を渡します。ここを雑にすると一発で信用を失います</li>
+    <li><strong>答えられないときに正直に言うこと</strong>。データがない地域や業種で無理に答えさせない</li>
+    <li><strong>キャラクターの一貫性</strong>。安いモデルでも設定を丁寧に書けば保てます</li>
+  </ul>
+
+  <h3>相談回数に上限を入れる</h3>
+  <p>いちばん確実なコスト管理です。<strong>会員1人あたり月3相談まで</strong>にすると、費用が会員数で読めるようになります。上限に当たったときは、次の枠が戻る日を示すか、有料プランへ案内します。</p>
+</section>
+
+<section>
+  <h2>おすすめの3パターン</h2>
+  <p>まだ課金は考えず、<strong>すべて無料で出す前提</strong>の3段階です。会員500人、相談枠は1人月3回まで、枠を使い切る人が4割という想定で計算しています。</p>
+
+  <div class="plan">
+    <div class="plan-top"><h3>① 最小</h3><span class="note">月6,200円</span></div>
+    <p class="plan-spec">
+      <strong>A（一般相談）とB（相場提示）だけ。</strong>
+      業界の一般知識で答えるAと、エリアの給与分布を数字で見せるBの2つです。
+      C（本人の条件と突き合わせる個別検証）はまだ作りません。
+      安いモデル・口コミ20件・1相談6往復。
+    </p>
+    <dl class="plan-fig">
+      <div><dt>相談数/月</dt><dd>600件</dd></div>
+      <div><dt>月額</dt><dd>6,200円</dd></div>
+      <div><dt>1相談あたり</dt><dd>10円</dd></div>
+    </dl>
+  </div>
+
+  <div class="plan rec">
+    <div class="plan-top"><h3>② 標準</h3><span class="badge">おすすめ</span></div>
+    <p class="plan-spec">
+      <strong>①にC（本人の条件と突き合わせる個別検証）を足します。</strong>
+      プロフィールを踏まえて「週2日で月30万は可能か」を検証する機能で、
+      りあれびの強みが出る部分です。安いモデル・口コミ20件・1相談6往復。
+    </p>
+    <dl class="plan-fig">
+      <div><dt>相談数/月</dt><dd>600件</dd></div>
+      <div><dt>月額</dt><dd>7,100円</dd></div>
+      <div><dt>1相談あたり</dt><dd>12円</dd></div>
+    </dl>
+  </div>
+
+  <div class="plan">
+    <div class="plan-top"><h3>③ しっかり</h3><span class="note">品質重視</span></div>
+    <p class="plan-spec">
+      <strong>②と同じ3機能ですが、C（個別検証）だけ高いモデルを使います。</strong>
+      読み込む口コミを40件に増やし、1相談8往復までじっくり話せるようにします。
+    </p>
+    <dl class="plan-fig">
+      <div><dt>相談数/月</dt><dd>600件</dd></div>
+      <div><dt>月額</dt><dd>12,800円</dd></div>
+      <div><dt>1相談あたり</dt><dd>21円</dd></div>
+    </dl>
+  </div>
+
+  <p><strong>①で始めて②に移るのが無理のない順序です。</strong>①と②の差は月900円しかないので、最初から②でも構いません。ただしC（個別検証）は「どんな条件で相談が来るか」が分かってから設計したほうが、作るものが決まって無駄が出ません。まず①で相談を溜める意味はそこにあります。</p>
+
+  <h3>②標準を無料で出した場合の、会員数別の月額</h3>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>会員数</th><th class="num">相談数/月</th><th class="num">月額</th></tr></thead>
+      <tbody>
+        <tr><td>100人</td><td class="num">120件</td><td class="num">1,400円</td></tr>
+        <tr><td>500人</td><td class="num">600件</td><td class="num">7,100円</td></tr>
+        <tr><td>1,000人</td><td class="num">1,200件</td><td class="num">14,100円</td></tr>
+        <tr><td>2,000人</td><td class="num">2,400件</td><td class="num">28,200円</td></tr>
+        <tr><td>5,000人</td><td class="num">6,000件</td><td class="num">70,600円</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>会員が増えるとそのまま増えます。<strong>1,000人を超えたあたりから、回収を考える必要が出てきます。</strong></p>
+</section>
+
+<section>
+  <h2>費用を回収する案</h2>
+  <p>会員が増えると月額も増えます。これをキャストさんからの課金で回収する場合の形です。</p>
+
+  <h3>どこを有料にするか</h3>
+  <p>素直なのは<strong>C（本人の条件と突き合わせる個別検証）を有料限定にする</strong>やり方です。</p>
+  <div class="scroll">
+    <table>
+      <thead><tr><th></th><th>使える機能</th><th class="num">相談枠</th></tr></thead>
+      <tbody>
+        <tr><td><strong>無料会員</strong></td>
+            <td>A（一般相談）＋B（相場提示）<br><span class="note">一般的な質問と、エリアの給与分布まで</span></td>
+            <td class="num">月3回</td></tr>
+        <tr><td><strong>有料会員</strong><br><span class="note">月500円</span></td>
+            <td>A＋B＋<strong>C（個別検証）</strong><br><span class="note">自分の条件で成り立つかを検証できる</span></td>
+            <td class="num">月10回</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p>無料でも相場は見られるので、価値を感じた人だけが上がる形になります。<strong>Cは原価が高い機能なので、課金の対象として筋が通っています。</strong></p>
+
+  <h3>課金率でどう変わるか</h3>
+  <p>会員500人の場合です。課金率は「会員のうち何%が有料になるか」です。</p>
+  <div class="scroll">
+    <table>
+      <thead><tr><th>課金率</th><th class="num">有料会員</th><th class="num">AI原価</th><th class="num">売上</th><th class="num">収支</th></tr></thead>
+      <tbody>
+        <tr><td>2%</td><td class="num">10人</td><td class="num">6,600円</td><td class="num">5,000円</td><td class="num neg">−1,800円</td></tr>
+        <tr><td>3%</td><td class="num">15人</td><td class="num">6,800円</td><td class="num">7,500円</td><td class="num pos">+400円</td></tr>
+        <tr><td>5%</td><td class="num">25人</td><td class="num">7,100円</td><td class="num">12,500円</td><td class="num pos">+4,800円</td></tr>
+        <tr><td>10%</td><td class="num">50人</td><td class="num">8,000円</td><td class="num">25,000円</td><td class="num pos">+15,900円</td></tr>
+        <tr><td>20%</td><td class="num">100人</td><td class="num">9,700円</td><td class="num">50,000円</td><td class="num pos">+38,100円</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>課金率3%で黒字になります。</strong>会員500人なら15人です。有料会員が増えても原価はあまり増えないので（6,600円→9,700円）、売上がほぼそのまま残ります。</p>
+
+  <h3>価格をいくらにするか</h3>
+  <div class="scroll">
+    <table>
+      <caption>会員500人・課金率5%の場合</caption>
+      <thead><tr><th>価格</th><th class="num">相談枠</th><th class="num">AI原価</th><th class="num">売上</th><th class="num">決済手数料</th><th class="num">収支</th></tr></thead>
+      <tbody>
+        <tr><td>月500円</td><td class="num">10回</td><td class="num">7,100円</td><td class="num">12,500円</td><td class="num">550円</td><td class="num pos">+4,800円</td></tr>
+        <tr><td>月980円</td><td class="num">20回</td><td class="num">8,300円</td><td class="num">24,500円</td><td class="num">1,100円</td><td class="num pos">+15,100円</td></tr>
+        <tr><td>月1,980円</td><td class="num">50回</td><td class="num">11,800円</td><td class="num">49,500円</td><td class="num">2,200円</td><td class="num pos">+35,500円</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p><strong>月500円から始めるのが無理がないと思います。</strong>キャストさんが払う額としては小さく、それでも課金率3%で黒字になります。足りなければ上げられますが、下げるのは難しいので低めから始めるほうが安全です。</p>
+
+  <h3>決済手数料は論点になりません</h3>
+  <p>Stripeの場合、カード決済3.6%にサブスク管理0.7%が乗って<strong>実質4.4%</strong>。初期費用も月額固定費もありません。月500円なら手数料は22円で、<strong>AI原価のほうが10倍大きい</strong>です。</p>
+
+  <div class="callout">
+    <h3>決済を入れるコストは手数料ではなく工数です</h3>
+    <p>WordPressに課金を組み込むと、プラン管理・解約・支払い失敗時の扱い・領収書・特定商取引法の表記が必要になります。<strong>手数料の22円より、この実装と運用のほうが重いです。</strong></p>
+    <p>無料だけなら①で月6,200円、②で月7,100円で回ります。<strong>決済は後回しでいい</strong>と考えます。「C（個別検証）をもっと使いたい」という声が出てから入れるほうが、価格も枠も決まって無駄が出ません。</p>
+  </div>
+</section>
+
+<section>
+  <h2>概算シミュレーター</h2>
+  <p>条件を選ぶと月額を計算します。上の表と同じ計算式です。</p>
+
+  <div class="sim">
+    <div class="field">
+      <label for="members">会員数</label>
+      <span class="help">AI窓口を使える会員の数。相談数はここから計算します。</span>
+      <input type="number" id="members" value="500" min="0" max="100000" step="10">
+    </div>
+
+    <div class="field">
+      <label for="cap">無料会員の相談枠</label>
+      <span class="help">1人が1か月に相談できる回数。少なくするほど費用が読めますが、使いにくくなります。</span>
+      <select id="cap">
+        <option value="1">月1相談まで（いちばん安い。お試し向け）</option>
+        <option value="3" selected>月3相談まで（おすすめ。月1回の相談＋追加2回）</option>
+        <option value="5">月5相談まで（よく使う人も満足する）</option>
+        <option value="999">上限なし（費用が読めなくなるので非推奨）</option>
+      </select>
+      <p class="opt-note" id="note-cap"></p>
+    </div>
+
+    <div class="field">
+      <label for="use">枠を使い切る人の割合</label>
+      <span class="help">会員全員が毎月相談するわけではありません。登録だけして使わない人が多数です。</span>
+      <select id="use">
+        <option value="0.2">2割（告知しない・導線が目立たない）</option>
+        <option value="0.4" selected>4割（標準的な想定）</option>
+        <option value="0.7">7割（トップに大きく出す・好評な場合）</option>
+      </select>
+    </div>
+
+    <fieldset>
+      <legend>使う機能</legend>
+      <div class="check">
+        <input type="checkbox" id="fA" checked>
+        <label for="fA"><span><b>A 一般的な相談</b><em>データを引かない。業界の一般知識で答える。1相談9円</em></span></label>
+      </div>
+      <div class="check">
+        <input type="checkbox" id="fB" checked>
+        <label for="fB"><span><b>B 相場を数字で見せる</b><em>エリアと業種の分布を返す。1相談13円</em></span></label>
+      </div>
+      <div class="check">
+        <input type="checkbox" id="fC">
+        <label for="fC"><span><b>C 本人の条件と突き合わせる</b><em>プロフィールを踏まえた検証。1相談19円。りあれびの強みが出る機能</em></span></label>
+      </div>
+    </fieldset>
+
+    <div class="row">
+      <div class="field">
+        <label for="model">Cで使うモデル</label>
+        <span class="help">A・Bは安いほうで固定します。</span>
+        <select id="model">
+          <option value="cheap" selected>安いほう（違いはほぼ分からない）</option>
+          <option value="rich">高いほう（文章が滑らか。約2倍）</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="nrev">読み込む口コミ</label>
+        <span class="help">減らしても費用はほぼ変わりません。</span>
+        <select id="nrev">
+          <option value="20" selected>20件（標準）</option>
+          <option value="40">40件（少数派の指摘も拾える）</option>
+          <option value="60">60件（ほぼ全件）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="turns">1相談の往復数</label>
+      <span class="help">質問と回答の往復を何回まで1相談として数えるか。長いほど費用が上がります。</span>
+      <select id="turns">
+        <option value="4">4往復（短い。簡単な質問向け）</option>
+        <option value="6" selected>6往復（おすすめ。ひととおり聞ける）</option>
+        <option value="8">8往復（じっくり相談できる）</option>
+        <option value="10">10往復（上限。これ以上は次の相談として数える）</option>
+      </select>
+      <p class="opt-note" id="note-turns"></p>
+    </div>
+
+    <div class="row">
+      <div class="field">
+        <label for="price">有料プラン</label>
+        <span class="help">C（個別検証）を有料限定にする場合。無料会員はA＋Bだけになります。</span>
+        <select id="price">
+          <option value="0" selected>作らない（全部無料）</option>
+          <option value="500">月500円（月10相談まで）</option>
+          <option value="980">月980円（月20相談まで）</option>
+          <option value="1980">月1,980円（月50相談まで）</option>
+        </select>
+      </div>
+      <div class="field">
+        <label for="ratio">課金率</label>
+        <span class="help">会員のうち有料になる割合。</span>
+        <select id="ratio">
+          <option value="0.02">2%（控えめな想定）</option>
+          <option value="0.05" selected>5%（一般的な水準）</option>
+          <option value="0.1">10%（刺さった場合）</option>
+          <option value="0.2">20%（かなり好調）</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="result">
+      <h3>月額の概算</h3>
+      <dl class="rgrid">
+        <div><dt>相談数</dt><dd id="r-n">—</dd></div>
+        <div><dt>AI原価</dt><dd id="r-cost">—</dd></div>
+        <div><dt>有料会員</dt><dd id="r-paid">—</dd></div>
+        <div><dt>売上</dt><dd id="r-rev">—</dd></div>
+      </dl>
+      <div class="balance"><span id="r-feelabel">決済手数料 —</span><strong id="r-bal">—</strong></div>
+      <p class="opt-note" id="r-msg"></p>
+    </div>
+  </div>
+  <p class="note">1ドル150円で換算した概算です。日本語1文字をおよそ1トークンとして計算しています。実際のプロンプトが決まった時点で実測すると、ここの誤差は消えます。</p>
+</section>
+
+<section>
+  <h2>気をつけるべきこと</h2>
+
+  <div class="callout">
+    <h3>1 ムスメコネクトのデータは本文を出せません</h3>
+    <p>事務局から書面で許諾を得ていますが、条件が「社内での分析・照合に限る、本文は転載・公開しない」です。<strong>AIの回答に口コミの本文をそのまま出すと、この約束を破ることになります。</strong></p>
+    <p>集計結果や要約として使うのは問題ありません。「〇件の指摘があります」は可、原文の引用は不可。実装時にここを機械的に止める必要があります。</p>
+  </div>
+
+  <div class="callout">
+    <h3>2 店舗の紹介は職業紹介にあたる可能性があります</h3>
+    <p>有料職業紹介事業の許可なく特定の店をあっせんすると、職業安定法に触れるおそれがあります。<strong>「情報提供」に留める設計が必要です。</strong></p>
+    <ul>
+      <li class="no">あなたには〇〇店がおすすめです</li>
+      <li class="yes">この条件だとエリアの相場は日給〇円です。ご覧の求人は相場より高めで、同条件の店の口コミではこういう指摘が多いです</li>
+    </ul>
+    <p>システム側で縛れますが、<strong>線引きの最終確認は専門家にお願いしてください。</strong>ここは私の判断だけで進めるべきところではありません。</p>
+  </div>
+
+  <div class="callout">
+    <h3>3 相談内容は機微な個人情報になります</h3>
+    <p>勤務先・収入・トラブルの相談は、扱いに配慮が必要な情報です。利用規約とプライバシーポリシーに、次の3点を明記して同意を取る必要があります。</p>
+    <ul>
+      <li>AIが応答すること</li>
+      <li>内容を保存すること</li>
+      <li>スタッフが閲覧し得ること</li>
+    </ul>
+  </div>
+
+  <div class="callout">
+    <h3>4 AIは数字を作ってしまうことがあります</h3>
+    <p>「平均44,000円」のような数字をAIに考えさせると、もっともらしい嘘が混ざります。<strong>数字は必ずデータベースから計算して渡し、AIには文章化だけをさせる</strong>設計にします。これは実装の作り方で防げます。</p>
+  </div>
+
+  <div class="callout">
+    <h3>5 データは取得時点のスナップショットです</h3>
+    <p>求人条件は変わります。更新のしくみは作ってありますが、回す頻度を決める必要があります。相場として使うなら月1回、個別の店の条件を見せるなら週1回が目安です。</p>
+  </div>
+</section>
+
+<section>
+  <h2>会話とプロフィールの保存</h2>
+  <p>会話を後から見返すことも、会員情報に紐づけることも、どちらもできます。ただしAI側が保存してくれるわけではないので、<strong>りあれび側に保存するしくみを作る必要があります。</strong></p>
+  <p><strong>保存期間は、プロフィールと会話ログで分けるのが要点です。</strong></p>
+
+  <div class="scroll">
+    <table>
+      <thead><tr><th>保存するもの</th><th>期間</th><th>理由</th></tr></thead>
+      <tbody>
+        <tr>
+          <td><strong>プロフィール</strong><br><span class="note">希望収入・勤務日数・NG条件・経験</span></td>
+          <td><strong>期間を切らなくてよい</strong></td>
+          <td>本人が目的を理解して提供した項目。利用目的が続くかぎり持てる</td>
+        </tr>
+        <tr>
+          <td><strong>会話ログ</strong><br><span class="note">やり取りの本文</span></td>
+          <td>90日などで区切る</td>
+          <td>第三者の話や機微な内容が混ざる。貯めるほどリスクだけ増える</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p><strong>初回にプロフィールを聞いて保存する設計は、むしろ推奨です。</strong>2回目以降に毎回聞き直す必要がなくなり、費用も下がります。条件は2つだけです。</p>
+  <ul>
+    <li>退会したら消す</li>
+    <li>本人からの開示・訂正・削除の求めに応じられる形にしておく</li>
+  </ul>
+  <p class="note">以上は一般的な整理です。規約の文面は専門家に確認してください。</p>
+</section>
+
+<section>
+  <h2>進め方の案</h2>
+  <p>決済を最後に回し、<strong>月6,200円で始めて様子を見る</strong>順番にしています。課金は最後です。</p>
+  <ol class="steps">
+    <li><b>規約の改定と専門家の確認</b>公開前に済ませます。職業紹介の線引きと、相談内容の保存について。</li>
+    <li><b>パターン①を会員限定で出す</b>A（一般相談）とB（相場提示）だけ、月3相談まで。店をすすめないので職業紹介の論点を避けられます。会員500人で<strong>月6,200円</strong>。ここで実際の相談内容が溜まります。</li>
+    <li><b>溜まった相談を見てC（個別検証）を設計する</b>どんな条件で相談が来るかが分かってから、本人の条件と突き合わせる機能の中身を決めます。先に作り込まないほうが無駄が出ません。</li>
+    <li><b>需要が見えてからC（個別検証）を出し、必要なら課金する（パターン②）</b>まずは無料で出して構いません。会員が1,000人を超えて月額が気になってきたら、Cを有料限定（月500円）にして回収します。課金率3%で黒字になります。</li>
+  </ol>
+</section>
+
+<section>
+  <h2>おまけ：運営側でこんな使い方もできます</h2>
+  <p>キャストさん向けの窓口とは別に、<strong>りあれびに投稿されたクチコミの裏取り</strong>にも同じデータが使えます。</p>
+  <div class="dialog">
+    <p class="q">投稿「この店は罰金がある」</p>
+    <p>同じ指摘が他媒体に12件（ヘブン5・バニラ4・ムスメ3）。一方で求人票には「罰金なし」と記載。乖離あり。</p>
+  </div>
+  <p>対象店の全媒体の口コミと求人票の記載を突き合わせて、投稿が妥当かを判定します。<strong>1件4〜17円</strong>で、1日20投稿なら月2,000〜10,000円程度。サクラ投稿や、逆に不当な低評価を見つける用途にも使えます。</p>
+  <p>対外的な表示がなく法律の論点もないので、<strong>いちばん安全に試せる使い方</strong>でもあります。窓口より先にこれだけ動かしてみる、という選択もあります。</p>
+</section>
+
+<footer>
+  <p>費用はAnthropicの2026年10月時点の公開料金、決済手数料はStripeの公開料率をもとにした概算（1ドル150円換算）。データ件数は2026年10月1日時点の取得済み件数で、一部の媒体はまだ取得が続いています。</p>
+</footer>
+
+</div>
+
+<script>
+(function () {
+  "use strict";
+  var YEN = 150;
+  var P = {
+    cheap: { in: 2.0, out: 10.0, cr: 0.20, cw: 2.5 },
+    rich:  { in: 4.0, out: 20.0, cr: 0.20, cw: 5.0 }
+  };
+  var SYS = 2500, HIST = 700;
+  var OUT = { A: 500, B: 600, C: 1200 };
+  var MIX = { A: 0.50, B: 0.35, C: 0.15 };
+
+  function dataTokens(mode, nrev) {
+    if (mode === "A") return 0;
+    if (mode === "B") return 2000 + nrev * 150;
+    return 4000 + nrev * 150 + 400 + 500;
+  }
+
+  // 1相談あたりの円。初回はキャッシュ書き込み、2回目以降は読み出し単価
+  function yenPerConsult(mode, model, nrev, turns) {
+    var p = P[model], fixed = SYS + dataTokens(mode, nrev), total = 0;
+    for (var i = 1; i <= turns; i++) {
+      var rate = (i === 1) ? p.cw : p.cr;
+      total += fixed / 1e6 * rate + ((i - 1) * HIST) / 1e6 * p.in + OUT[mode] / 1e6 * p.out;
+    }
+    return total * YEN;
+  }
+
+  function stripeFee(rev) { return rev * 0.036 + rev * 0.007 * 1.10; }
+
+  function el(id) { return document.getElementById(id); }
+  function yen(n) { return Math.round(n).toLocaleString("ja-JP") + "円"; }
+
+  function calc() {
+    var members = Math.max(0, parseInt(el("members").value, 10) || 0);
+    var cap = parseFloat(el("cap").value);
+    var use = parseFloat(el("use").value);
+    var model = el("model").value;
+    var nrev = parseInt(el("nrev").value, 10);
+    var turns = parseInt(el("turns").value, 10);
+    var price = parseInt(el("price").value, 10);
+    var ratio = parseFloat(el("ratio").value);
+
+    var on = { A: el("fA").checked, B: el("fB").checked, C: el("fC").checked };
+    // Cを切ったら有料プランは成立しないので、課金なしとして扱う
+    if (!on.C) price = 0;
+    var paid = price > 0 ? Math.round(members * ratio) : 0;
+    var free = members - paid;
+    var paidCap = price === 500 ? 10 : price === 980 ? 20 : price === 1980 ? 50 : 0;
+
+    var effCap = Math.min(cap, 30);           // 上限なしは月30相談として見積もる
+    var nFree = free * effCap * use, nPaid = paid * paidCap * use;
+    var n = nFree + nPaid;
+
+    // 課金する場合、Cは有料会員だけが使える。無料会員はA+Bのぶんを振り直す
+    var freeModes = [], paidModes = [];
+    ["A", "B", "C"].forEach(function (m) {
+      if (!on[m]) return;
+      paidModes.push(m);
+      if (!(m === "C" && price > 0)) freeModes.push(m);
+    });
+
+    function costOf(cnt, modes) {
+      var share = 0, c = 0;
+      modes.forEach(function (m) { share += MIX[m]; });
+      if (share === 0) return 0;
+      modes.forEach(function (m) {
+        var mdl = (m === "C") ? model : "cheap";
+        c += cnt * (MIX[m] / share) * yenPerConsult(m, mdl, m === "A" ? 0 : nrev, turns);
+      });
+      return c;
+    }
+
+    var cost = costOf(nFree, freeModes) + costOf(nPaid, paidModes);
+    if (paidModes.length === 0) { n = 0; cost = 0; }
+
+    var rev = paid * price;
+    var fee = rev > 0 ? stripeFee(rev) : 0;
+    var bal = rev - cost - fee;
+
+    el("r-n").textContent = Math.round(n).toLocaleString("ja-JP") + "件";
+    el("r-cost").textContent = yen(cost);
+    el("r-paid").textContent = paid.toLocaleString("ja-JP") + "人";
+    el("r-rev").textContent = yen(rev);
+    el("r-feelabel").textContent = "決済手数料 " + yen(fee);
+    var b = el("r-bal");
+    b.textContent = (bal >= 0 ? "+" : "−") + yen(Math.abs(bal));
+    b.className = bal >= 0 ? "pos" : "neg";
+
+    var msg = "";
+    if (paidModes.length === 0) msg = "機能を1つ以上選んでください。";
+    else if (price === 0) msg = "全部無料なので、AI原価がそのまま持ち出しになります。広告費と考えるなら " + yen(cost) + "／月です。";
+    else if (bal >= 0) msg = "黒字です。有料会員が増えてもAI原価はあまり増えないので、課金率が上がるほど残りが増えます。";
+    else msg = "赤字です。課金率を上げるか、無料枠を狭めると黒字に向かいます。";
+    el("r-msg").textContent = msg;
+
+    el("note-cap").textContent = cap > 30
+      ? "上限なしは月30相談として概算しています。実際には読めない額になり得ます。"
+      : "";
+    el("note-turns").textContent = turns >= 10
+      ? "10往復で「相談を続けますか？」を出し、続きは次の相談として数える想定です。"
+      : "";
+  }
+
+  ["members", "cap", "use", "model", "nrev", "turns", "price", "ratio", "fA", "fB", "fC"]
+    .forEach(function (id) {
+      var e = el(id);
+      e.addEventListener("input", calc);
+      e.addEventListener("change", calc);
+    });
+  calc();
+})();
+</script>
+
+</body>
+</html>
